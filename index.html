@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zim Random Chat 🇿🇼 | Connect with Strangers</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container fade-in">
+        <div class="header">
+            <h1>🇿🇼 Zim Random Chat</h1>
+            <p>Taura Nevanhu veshuwa. Usingazikanwi. Zvenguva iyoyo.</p>
+            <div class="online-counter">
+                <i class="fas fa-users"></i> <span id="onlineCount">0</span> users online
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Username Selection Screen -->
+            <div class="username-screen" id="usernameScreen">
+                <div class="welcome-icon">
+                    <i class="fas fa-user-edit"></i>
+                </div>
+                <h2>Choose Your Vibe Name 🎭</h2>
+                <p>Pick a cool name or stay anonymous. You'll get a random Zim name like "<span id="randomNameExample"></span>"!</p>
+                
+                <div class="username-form">
+                    <input type="text" id="usernameInput" placeholder="Enter your name (or stay Anonymous)" maxlength="20">
+                    <button class="btn" onclick="setUsername()">
+                        <i class="fas fa-check"></i> Start Chatting
+                    </button>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="skipUsername()">
+                    <i class="fas fa-bolt"></i> Use Random Name: <span id="randomNameBtn"></span>
+                </button>
+            </div>
+            
+            <!-- Welcome Screen -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h2>Welcome, <span id="displayUsername">Anonymous</span>! 🎵</h2>
+                <p>Clicka start utaure nemunhu chero. Chat Anonymously.</p>
+                <button class="btn pulse" onclick="startChat()">
+                    <i class="fas fa-play"></i> Start Chatting
+                </button>
+                <div class="online-counter" style="margin-top: 20px;">
+                    <i class="fas fa-users"></i> <span id="welcomeOnlineCount">0</span> vanhu online izvozvi
+                </div>
+            </div>
+            
+            <!-- Waiting Screen -->
+            <div class="waiting-screen" id="waitingScreen">
+                <div class="loader"></div>
+                <h3>Looking for someone cool... 🔍</h3>
+                <p>Mira Wakadaro! Trikukutsvagira munhu aribhoo wekutaura naye.</p>
+                <div class="status waiting">
+                    <i class="fas fa-clock"></i> Searching... (<span id="searchOnlineCount">0</span> users online)
+                </div>
+                <button class="btn btn-warning" onclick="cancelSearch()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+            
+            <!-- Chat Screen -->
+            <div class="chat-screen" id="chatScreen">
+                <div class="chat-header">
+                    <div>
+                        <i class="fas fa-user-secret"></i> Chatting with <span id="partnerName">a Stranger</span>
+                    </div>
+                    <div class="status connected">
+                        <i class="fas fa-circle"></i> Live
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Messages will appear here -->
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Type your message... Press Enter to send" maxlength="500">
+                    <button onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <button class="btn btn-warning" onclick="endChat()" style="margin: 10px;">
+                    <i class="fas fa-door-open"></i> End Chat
+                </button>
+            </div>
+        </div>
+
+        <!-- Site Information Section -->
+        <div class="site-info">
+            <div class="info-section">
+                <h3><i class="fas fa-info-circle"></i> About Zim Random Chat</h3>
+                <p>Zim Random Chat ndo platform chaiyo chaiyo yeku connecta nevanhu veshuwa vemu Zimbabwe nekumwe. Unotaura usingazikanwi nevanhu, unogona kuita shamwari nyowani, nekuita ma conversations ari bhoo pasina pressure ye social media or ku signa up.</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-user-secret"></i>
+                    <h4>100% Anonymous</h4>
+                    <p>Hapana zveku register or kugadzira account ne information yako. Kungotaura chete</p>
+                </div>
+                
+                <div class="feature-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>Safe & Secure</h4>
+                    <p>Ma Chats ano deletika paunongobva. Privacy yako yakatikoshera.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <i class="fas fa-bolt"></i>
+                    <h4>Instant Connection</h4>
+                    <p>Unokwanisa kutaura nevanhu vakawanda in seconds. No waiting.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <i class="fas fa-heart"></i>
+                    <h4>Zim Vibe</h4>
+                    <p>Built for Zimbabweans by Zimbabweans. Feel the local flavor!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
