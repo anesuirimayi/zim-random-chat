@@ -1,4 +1,4 @@
-// app.js - Zim Random Chat Frontend
+// app.js - Zim Random Chat Frontend - FULLY WORKING VERSION
 class ZimRandomChat {
     constructor() {
         this.API_BASE = 'https://zimchat.infinityfree.me/api.php';
@@ -15,8 +15,7 @@ class ZimRandomChat {
     }
 
     init() {
-        console.log('🇿🇼 Zim Random Chat Initialized');
-        console.log('Session:', this.sessionId);
+        console.log('🇿🇼 Zim Random Chat Initialized - Session:', this.sessionId);
         
         this.loadUserData();
         this.setupEventListeners();
@@ -30,7 +29,6 @@ class ZimRandomChat {
             this.showWelcomeScreen();
         }
         
-        // Set random name examples
         this.updateRandomNameExamples();
     }
 
@@ -39,6 +37,7 @@ class ZimRandomChat {
         if (!sessionId) {
             sessionId = 'zim_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('zimchat_session', sessionId);
+            console.log('🆕 New session created:', sessionId);
         }
         return sessionId;
     }
@@ -47,36 +46,33 @@ class ZimRandomChat {
         const savedUsername = localStorage.getItem('zimchat_username');
         if (savedUsername) {
             this.username = savedUsername;
+            console.log('👤 Loaded username:', this.username);
         }
     }
 
     setupEventListeners() {
-        // Enter key in username input
         document.getElementById('usernameInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.setUsername();
         });
 
-        // Enter key in message input
         document.getElementById('messageInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.sendMessage();
         });
 
-        // Handle page visibility changes
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                this.handleUserInactive();
+                console.log('👋 User inactive');
             } else {
-                this.handleUserActive();
+                console.log('👋 User active');
+                this.updateOnlineCount();
             }
         });
 
-        // Handle page unload
         window.addEventListener('beforeunload', () => {
             this.cleanup();
         });
     }
 
-    // Random name generator - Shona style!
     generateRandomName() {
         const names = [      
             'Mwoyo weShumba', 'Sadza neNyama', 'Bapiro reHuku', 'Mazondo',
@@ -93,27 +89,59 @@ class ZimRandomChat {
         document.getElementById('randomNameBtn').textContent = this.generateRandomName();
     }
 
-    // API Communication
+    // SIMPLE API CALL - NO CORS PROXY NEEDED
     async apiCall(action, params = {}) {
+        // Build the URL
         const urlParams = new URLSearchParams({
             action: action,
-            session: this.sessionId,
-            ...params
+            session: this.sessionId
         });
-
+        
+        // Add additional parameters
+        for (const [key, value] of Object.entries(params)) {
+            if (value !== undefined && value !== null) {
+                urlParams.append(key, value);
+            }
+        }
+        
+        const url = `${this.API_BASE}?${urlParams}`;
+        console.log('🌐 API Call:', url);
+        
         try {
-            const response = await fetch(`${this.API_BASE}?${urlParams}`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            return await response.json();
+            const response = await fetch(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+            
+            console.log('📡 Response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('✅ API Success:', data);
+            return data;
+            
         } catch (error) {
-            console.error('API Error:', error);
-            return { error: 'Connection failed' };
+            console.error('❌ API Error:', error);
+            return { error: error.message };
         }
     }
 
-    // User registration and online tracking
     async registerUser(username = 'Anonymous') {
-        return await this.apiCall('register_online', { username: username });
+        console.log('👤 Registering user:', username);
+        const result = await this.apiCall('register_online', { username: username });
+        
+        if (result.error) {
+            console.error('❌ Registration failed:', result.error);
+        } else {
+            console.log('✅ User registered:', result);
+        }
+        return result;
     }
 
     async startHeartbeat() {
@@ -133,13 +161,14 @@ class ZimRandomChat {
                 document.querySelectorAll('#onlineCount, #welcomeOnlineCount, #searchOnlineCount').forEach(el => {
                     el.textContent = data.count;
                 });
+                console.log('👥 Online count updated:', data.count);
             }
         } catch (error) {
             console.log('Error updating online count:', error);
         }
     }
 
-    // Screen Management
+    // SCREEN MANAGEMENT
     hideAllScreens() {
         ['usernameScreen', 'welcomeScreen', 'waitingScreen', 'chatScreen'].forEach(screen => {
             document.getElementById(screen).style.display = 'none';
@@ -151,6 +180,7 @@ class ZimRandomChat {
         document.getElementById('usernameScreen').style.display = 'block';
         document.getElementById('usernameInput').focus();
         this.updateRandomNameExamples();
+        console.log('📱 Showing username screen');
     }
 
     showWelcomeScreen() {
@@ -158,12 +188,14 @@ class ZimRandomChat {
         document.getElementById('welcomeScreen').style.display = 'block';
         document.getElementById('displayUsername').textContent = this.username;
         this.updateOnlineCount();
+        console.log('📱 Showing welcome screen for:', this.username);
     }
 
     showWaitingScreen() {
         this.hideAllScreens();
         document.getElementById('waitingScreen').style.display = 'block';
         this.updateOnlineCount();
+        console.log('📱 Showing waiting screen');
     }
 
     showChatScreen() {
@@ -171,9 +203,10 @@ class ZimRandomChat {
         document.getElementById('chatScreen').style.display = 'flex';
         document.getElementById('chatMessages').innerHTML = '';
         document.getElementById('messageInput').focus();
+        console.log('📱 Showing chat screen');
     }
 
-    // Username Management
+    // USERNAME MANAGEMENT - SIMPLIFIED
     async setUsername() {
         const usernameInput = document.getElementById('usernameInput');
         let username = usernameInput.value.trim();
@@ -182,26 +215,42 @@ class ZimRandomChat {
             username = this.generateRandomName();
         }
         
-        // Limit length
         username = username.substring(0, 20);
+        console.log('🔄 Setting username to:', username);
         
         const result = await this.apiCall('set_username', { username: username });
-        if (result.status === 'success' || !result.error) {
+        
+        if (result.error) {
+            console.error('❌ set_username failed:', result.error);
+            alert('Error setting username. Using random name.');
+            this.skipUsername();
+        } else {
+            console.log('✅ Username set successfully:', result);
             this.username = username;
             localStorage.setItem('zimchat_username', username);
             document.getElementById('displayUsername').textContent = username;
+            
+            // Update registration with new username
             await this.registerUser(username);
             this.showWelcomeScreen();
-        } else {
-            alert('Error setting username. Using random name.');
-            this.skipUsername();
         }
     }
 
     async skipUsername() {
         const randomName = this.generateRandomName();
+        console.log('🎲 Using random name:', randomName);
+        
         const result = await this.apiCall('set_username', { username: randomName });
-        if (result.status === 'success' || !result.error) {
+        
+        if (result.error) {
+            console.error('❌ skipUsername failed:', result.error);
+            // Use local fallback
+            this.username = randomName;
+            localStorage.setItem('zimchat_username', randomName);
+            document.getElementById('displayUsername').textContent = randomName;
+            this.showWelcomeScreen();
+        } else {
+            console.log('✅ Random name set successfully:', result);
             this.username = randomName;
             localStorage.setItem('zimchat_username', randomName);
             document.getElementById('displayUsername').textContent = randomName;
@@ -210,8 +259,9 @@ class ZimRandomChat {
         }
     }
 
-    // Chat Matching System
+    // CHAT MATCHING
     async startChat() {
+        console.log('🚀 Starting chat search...');
         this.showWaitingScreen();
         this.isSearching = true;
         this.displayedMessageIds.clear();
@@ -221,37 +271,42 @@ class ZimRandomChat {
     }
 
     async searchForPartner() {
-        if (!this.isSearching) return;
+        if (!this.isSearching) {
+            console.log('❌ Search cancelled');
+            return;
+        }
         
         console.log('🔍 Searching for partner...');
         
         const result = await this.apiCall('join_pool');
-        console.log('Search result:', result);
+        console.log('🤝 Search result:', result);
         
         if (result.status === 'matched' && result.convo_id) {
+            console.log('🎉 Partner found! Convo ID:', result.convo_id);
             this.currentConvoId = result.convo_id;
             this.startChatSession();
         } else if (result.status === 'waiting') {
-            // Continue searching
+            console.log('⏳ Still waiting...');
             setTimeout(() => this.searchForPartner(), 2000);
         } else {
-            // Error or other status, retry
+            console.log('🔄 Retrying search...');
             setTimeout(() => this.searchForPartner(), 3000);
         }
     }
 
     async cancelSearch() {
+        console.log('❌ Cancelling search');
         this.isSearching = false;
         await this.apiCall('cancel_search');
         this.showWelcomeScreen();
     }
 
-    // Chat Session Management
+    // CHAT SESSION
     startChatSession() {
+        console.log('💬 Starting chat session:', this.currentConvoId);
         this.showChatScreen();
         this.sendSystemMessage('You are now connected! Say hi! 👋');
         
-        // Start checking for messages
         this.messageCheckInterval = setInterval(() => this.checkForMessages(), 1000);
     }
 
@@ -259,11 +314,14 @@ class ZimRandomChat {
         const input = document.getElementById('messageInput');
         const message = input.value.trim();
         
-        if (!message || !this.currentConvoId) return;
+        if (!message || !this.currentConvoId) {
+            console.log('❌ Cannot send message - no message or convo ID');
+            return;
+        }
         
         console.log('📤 Sending message:', message);
         
-        // Optimistic UI update
+        // Show message immediately
         const tempMessageId = 'temp_' + Date.now();
         this.addMessageToChat(message, 'self', this.username, tempMessageId);
         input.value = '';
@@ -275,13 +333,15 @@ class ZimRandomChat {
         });
         
         if (result.status === 'sent' && result.message_id) {
+            console.log('✅ Message sent successfully, ID:', result.message_id);
             this.lastMessageId = Math.max(this.lastMessageId, result.message_id);
-            // Replace temporary message with real one
+            
+            // Replace temporary message
             const tempMsg = document.querySelector(`[data-message-id="${tempMessageId}"]`);
             if (tempMsg) tempMsg.remove();
             this.addMessageToChat(message, 'self', this.username, result.message_id);
         } else {
-            // Mark as failed
+            console.error('❌ Failed to send message:', result);
             const tempMsg = document.querySelector(`[data-message-id="${tempMessageId}"]`);
             if (tempMsg) {
                 tempMsg.style.opacity = '0.6';
@@ -299,13 +359,16 @@ class ZimRandomChat {
         });
         
         if (result.convo_ended) {
+            console.log('🔚 Conversation ended by partner');
             this.endChat();
             return;
         }
         
         if (result.messages && result.messages.length > 0) {
+            console.log('📨 New messages:', result.messages.length);
             result.messages.forEach(msg => {
                 if (!this.displayedMessageIds.has(msg.message_id) && msg.sender_session !== this.sessionId) {
+                    console.log('💬 Displaying message from partner:', msg);
                     this.addMessageToChat(msg.message_text, 'other', msg.username, msg.message_id);
                     this.displayedMessageIds.add(msg.message_id);
                     this.lastMessageId = Math.max(this.lastMessageId, msg.message_id);
@@ -346,7 +409,6 @@ class ZimRandomChat {
         messageDiv.appendChild(bubbleDiv);
         messagesDiv.appendChild(messageDiv);
         
-        // Auto-scroll to bottom
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
@@ -392,17 +454,8 @@ class ZimRandomChat {
         this.showWelcomeScreen();
     }
 
-    // Utility methods
-    handleUserInactive() {
-        console.log('User inactive');
-    }
-
-    handleUserActive() {
-        console.log('User active');
-        this.updateOnlineCount();
-    }
-
     cleanup() {
+        console.log('🧹 Cleaning up...');
         if (this.heartbeatInterval) {
             clearInterval(this.heartbeatInterval);
         }
@@ -410,38 +463,54 @@ class ZimRandomChat {
             clearInterval(this.messageCheckInterval);
         }
         if (this.currentConvoId) {
-            // Try to notify server user left
-            navigator.sendBeacon(`${this.API_BASE}?action=end_chat&session=${this.sessionId}&convo_id=${this.currentConvoId}`);
+            // Try to notify server
+            fetch(`${this.API_BASE}?action=end_chat&session=${this.sessionId}&convo_id=${this.currentConvoId}`, {
+                method: 'GET',
+                mode: 'no-cors'
+            }).catch(() => {});
         }
     }
 }
 
 // Initialize the chat when page loads
 window.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 DOM loaded, initializing chat...');
     window.chatApp = new ZimRandomChat();
 });
 
-// Global functions for HTML onclick handlers
+// Global functions for HTML buttons
 function setUsername() {
-    window.chatApp.setUsername();
+    if (window.chatApp) {
+        window.chatApp.setUsername();
+    }
 }
 
 function skipUsername() {
-    window.chatApp.skipUsername();
+    if (window.chatApp) {
+        window.chatApp.skipUsername();
+    }
 }
 
 function startChat() {
-    window.chatApp.startChat();
+    if (window.chatApp) {
+        window.chatApp.startChat();
+    }
 }
 
 function cancelSearch() {
-    window.chatApp.cancelSearch();
+    if (window.chatApp) {
+        window.chatApp.cancelSearch();
+    }
 }
 
 function sendMessage() {
-    window.chatApp.sendMessage();
+    if (window.chatApp) {
+        window.chatApp.sendMessage();
+    }
 }
 
 function endChat() {
-    window.chatApp.endChat();
+    if (window.chatApp) {
+        window.chatApp.endChat();
+    }
 }
